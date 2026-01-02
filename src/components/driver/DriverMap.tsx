@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { useEffect, useState, useCallback } from 'react';
+import { Navigation, MapPin, Zap } from 'lucide-react';
 
 interface DriverMapProps {
   destination?: {
@@ -11,161 +10,203 @@ interface DriverMapProps {
   onEtaUpdate?: (eta: number) => void;
 }
 
+interface Position {
+  x: number;
+  y: number;
+}
+
 const DriverMap = ({ destination, onEtaUpdate }: DriverMapProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const ambulanceMarker = useRef<mapboxgl.Marker | null>(null);
-  const [mapToken, setMapToken] = useState<string>('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
+  const [ambulancePos, setAmbulancePos] = useState<Position>({ x: 30, y: 60 });
+  const [destinationPos, setDestinationPos] = useState<Position>({ x: 70, y: 30 });
+  const [trail, setTrail] = useState<Position[]>([]);
+  const [eta, setEta] = useState(8);
+  const [speed, setSpeed] = useState(0);
 
-  // Default center (can be user's location in production)
-  const defaultCenter: [number, number] = [-74.006, 40.7128]; // NYC
-
+  // Generate random destination when destination prop changes
   useEffect(() => {
-    if (!mapContainer.current || !mapToken) return;
-
-    mapboxgl.accessToken = mapToken;
-
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/navigation-night-v1',
-        center: defaultCenter,
-        zoom: 14,
-        pitch: 45,
+    if (destination) {
+      setDestinationPos({
+        x: 20 + Math.random() * 60,
+        y: 15 + Math.random() * 50,
       });
-
-      map.current.addControl(
-        new mapboxgl.NavigationControl({
-          visualizePitch: true,
-        }),
-        'top-right'
-      );
-
-      // Create custom ambulance marker
-      const ambulanceEl = document.createElement('div');
-      ambulanceEl.className = 'ambulance-marker';
-      ambulanceEl.innerHTML = `
-        <div style="
-          width: 48px;
-          height: 48px;
-          background: linear-gradient(135deg, #FF3B30 0%, #FF6B6B 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 20px rgba(255, 59, 48, 0.5);
-          animation: pulse-glow 2s infinite;
-        ">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <rect x="1" y="3" width="15" height="13" rx="2" ry="2"></rect>
-            <line x1="16" y1="8" x2="20" y2="8"></line>
-            <line x1="18" y1="6" x2="18" y2="10"></line>
-            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-            <circle cx="12.5" cy="18.5" r="2.5"></circle>
-            <path d="M16 16V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10"></path>
-          </svg>
-        </div>
-      `;
-
-      ambulanceMarker.current = new mapboxgl.Marker({
-        element: ambulanceEl,
-        anchor: 'center',
-      })
-        .setLngLat(defaultCenter)
-        .addTo(map.current);
-
-      // Simulate ambulance movement
-      let position = [...defaultCenter];
-      const moveInterval = setInterval(() => {
-        if (destination && map.current) {
-          const dx = (destination.lng - position[0]) * 0.02;
-          const dy = (destination.lat - position[1]) * 0.02;
-          position[0] += dx;
-          position[1] += dy;
-          ambulanceMarker.current?.setLngLat(position as [number, number]);
-          
-          // Calculate ETA based on distance
-          const distance = Math.sqrt(
-            Math.pow(destination.lng - position[0], 2) + 
-            Math.pow(destination.lat - position[1], 2)
-          );
-          const eta = Math.max(1, Math.round(distance * 500));
-          onEtaUpdate?.(eta);
-        }
-      }, 1000);
-
-      setShowTokenInput(false);
-
-      return () => {
-        clearInterval(moveInterval);
-        map.current?.remove();
-      };
-    } catch (error) {
-      console.error('Error initializing map:', error);
-      setShowTokenInput(true);
     }
-  }, [mapToken, destination, onEtaUpdate]);
-
-  // Add destination marker when destination changes
-  useEffect(() => {
-    if (!map.current || !destination) return;
-
-    const destEl = document.createElement('div');
-    destEl.innerHTML = `
-      <div style="
-        width: 32px;
-        height: 32px;
-        background: #007AFF;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
-      ">
-        <div style="transform: rotate(45deg); color: white; font-weight: bold;">📍</div>
-      </div>
-    `;
-
-    new mapboxgl.Marker({ element: destEl })
-      .setLngLat([destination.lng, destination.lat])
-      .addTo(map.current);
-
-    map.current.flyTo({
-      center: [destination.lng, destination.lat],
-      zoom: 15,
-      pitch: 60,
-    });
   }, [destination]);
 
-  if (showTokenInput) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-secondary/95 backdrop-blur-sm">
-        <div className="bg-card rounded-2xl p-6 max-w-md w-full mx-4 border border-border/30 shadow-xl">
-          <h3 className="text-lg font-bold text-foreground mb-2">Enable Live Map</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Enter your Mapbox public token to enable real-time navigation. 
-            Get yours at <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-accent underline">mapbox.com</a>
-          </p>
-          <input
-            type="text"
-            placeholder="pk.eyJ1Ijo..."
-            className="w-full px-4 py-3 rounded-xl bg-secondary border border-border/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent mb-4"
-            onChange={(e) => setMapToken(e.target.value)}
+  // Animate ambulance movement toward destination
+  useEffect(() => {
+    const moveInterval = setInterval(() => {
+      setAmbulancePos((prev) => {
+        const dx = (destinationPos.x - prev.x) * 0.03;
+        const dy = (destinationPos.y - prev.y) * 0.03;
+        
+        const newPos = {
+          x: prev.x + dx + (Math.random() - 0.5) * 0.5,
+          y: prev.y + dy + (Math.random() - 0.5) * 0.5,
+        };
+
+        // Add to trail
+        setTrail((t) => [...t.slice(-20), prev]);
+
+        // Calculate distance and ETA
+        const distance = Math.sqrt(
+          Math.pow(destinationPos.x - newPos.x, 2) +
+          Math.pow(destinationPos.y - newPos.y, 2)
+        );
+        const newEta = Math.max(1, Math.round(distance / 5));
+        setEta(newEta);
+        setSpeed(Math.round(30 + Math.random() * 20));
+        onEtaUpdate?.(newEta);
+
+        return newPos;
+      });
+    }, 100);
+
+    return () => clearInterval(moveInterval);
+  }, [destinationPos, onEtaUpdate]);
+
+  // Generate random movement for destination periodically
+  const generateNewDestination = useCallback(() => {
+    setDestinationPos({
+      x: 15 + Math.random() * 70,
+      y: 10 + Math.random() * 60,
+    });
+  }, []);
+
+  return (
+    <div className="absolute inset-0 bg-gradient-to-br from-night-black via-secondary to-night-black overflow-hidden">
+      {/* Grid overlay for map effect */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0, 122, 255, 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 122, 255, 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px',
+        }}
+      />
+
+      {/* Road lines simulation */}
+      <svg className="absolute inset-0 w-full h-full">
+        {/* Main roads */}
+        <line x1="0" y1="50%" x2="100%" y2="50%" stroke="rgba(255,255,255,0.15)" strokeWidth="20" />
+        <line x1="50%" y1="0" x2="50%" y2="100%" stroke="rgba(255,255,255,0.15)" strokeWidth="20" />
+        <line x1="0" y1="25%" x2="100%" y2="25%" stroke="rgba(255,255,255,0.1)" strokeWidth="12" />
+        <line x1="0" y1="75%" x2="100%" y2="75%" stroke="rgba(255,255,255,0.1)" strokeWidth="12" />
+        <line x1="25%" y1="0" x2="25%" y2="100%" stroke="rgba(255,255,255,0.1)" strokeWidth="12" />
+        <line x1="75%" y1="0" x2="75%" y2="100%" stroke="rgba(255,255,255,0.1)" strokeWidth="12" />
+        
+        {/* Trail path */}
+        {trail.map((pos, i) => (
+          <circle
+            key={i}
+            cx={`${pos.x}%`}
+            cy={`${pos.y}%`}
+            r={2}
+            fill={`rgba(255, 59, 48, ${0.1 + (i / trail.length) * 0.4})`}
           />
-          <button
-            onClick={() => setMapToken(mapToken)}
-            className="w-full py-3 bg-gradient-action text-primary-foreground font-semibold rounded-xl hover:brightness-110 transition-all"
-          >
-            Enable Navigation
-          </button>
+        ))}
+
+        {/* Route line from ambulance to destination */}
+        <line
+          x1={`${ambulancePos.x}%`}
+          y1={`${ambulancePos.y}%`}
+          x2={`${destinationPos.x}%`}
+          y2={`${destinationPos.y}%`}
+          stroke="rgba(0, 122, 255, 0.6)"
+          strokeWidth="3"
+          strokeDasharray="10,5"
+          className="animate-pulse"
+        />
+      </svg>
+
+      {/* Destination marker */}
+      <div
+        className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
+        style={{ left: `${destinationPos.x}%`, top: `${destinationPos.y}%` }}
+      >
+        <div className="relative">
+          <div className="absolute -inset-4 bg-action-blue/30 rounded-full animate-ping" />
+          <div className="w-10 h-10 bg-action-blue rounded-full flex items-center justify-center shadow-lg shadow-action-blue/50">
+            <MapPin className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-action-blue/90 px-2 py-0.5 rounded text-xs text-primary-foreground whitespace-nowrap">
+            {destination?.address || 'Patient Location'}
+          </div>
         </div>
       </div>
-    );
-  }
 
-  return <div ref={mapContainer} className="absolute inset-0" />;
+      {/* Ambulance marker */}
+      <div
+        className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 transition-all duration-100"
+        style={{ left: `${ambulancePos.x}%`, top: `${ambulancePos.y}%` }}
+      >
+        <div className="relative">
+          <div className="absolute -inset-6 bg-pulse-red/20 rounded-full animate-pulse-glow" />
+          <div className="w-14 h-14 bg-gradient-to-br from-pulse-red to-red-600 rounded-full flex items-center justify-center shadow-xl shadow-pulse-red/50 border-2 border-white/30">
+            {/* Custom Ambulance Icon */}
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white">
+              <rect x="1" y="4" width="15" height="11" rx="2" fill="currentColor" opacity="0.3"/>
+              <rect x="1" y="4" width="15" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M16 8h2.5a2 2 0 0 1 1.6.8l1.5 2a2 2 0 0 1 .4 1.2V14a2 2 0 0 1-2 2h-4" stroke="currentColor" strokeWidth="1.5"/>
+              <circle cx="5.5" cy="17.5" r="2" fill="currentColor"/>
+              <circle cx="16.5" cy="17.5" r="2" fill="currentColor"/>
+              <line x1="8" y1="7" x2="8" y2="12" stroke="currentColor" strokeWidth="2"/>
+              <line x1="5.5" y1="9.5" x2="10.5" y2="9.5" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation HUD overlay */}
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-30">
+        {/* Speed indicator */}
+        <div className="bg-card/90 backdrop-blur-sm rounded-xl p-3 border border-border/30">
+          <div className="text-3xl font-bold text-foreground">{speed}</div>
+          <div className="text-xs text-muted-foreground">km/h</div>
+        </div>
+
+        {/* ETA display */}
+        <div className="bg-gradient-action rounded-xl p-3 shadow-lg">
+          <div className="flex items-center gap-2">
+            <Navigation className="w-5 h-5 text-primary-foreground" />
+            <div>
+              <div className="text-2xl font-bold text-primary-foreground">{eta} min</div>
+              <div className="text-xs text-primary-foreground/80">ETA</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom direction indicator */}
+      <div className="absolute bottom-4 left-4 right-4 z-30">
+        <div className="bg-card/90 backdrop-blur-sm rounded-xl p-4 border border-border/30">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-action-blue rounded-lg flex items-center justify-center">
+              <Navigation className="w-5 h-5 text-primary-foreground rotate-45" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-muted-foreground">Next turn</div>
+              <div className="text-foreground font-semibold">Continue on Main Street</div>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-foreground">0.3</div>
+              <div className="text-xs text-muted-foreground">km</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* New destination button */}
+      <button
+        onClick={generateNewDestination}
+        className="absolute top-4 right-20 z-30 bg-card/90 backdrop-blur-sm rounded-xl p-3 border border-border/30 hover:bg-accent transition-colors"
+        title="Simulate new destination"
+      >
+        <Zap className="w-5 h-5 text-warning" />
+      </button>
+    </div>
+  );
 };
 
 export default DriverMap;
