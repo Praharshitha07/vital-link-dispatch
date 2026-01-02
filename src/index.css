@@ -6,104 +6,112 @@
 
 @layer base {
   :root {
-    /* Vital Guard Design System */
-    --background: 108 57% 96%;
-    --foreground: 214 50% 15%;
+    /* LifeLink "Neon Vitality" Design System */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 7%;
 
     --card: 0 0% 100%;
-    --card-foreground: 214 50% 15%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 214 50% 15%;
+    --popover-foreground: 0 0% 7%;
 
-    /* Emergency Red - Primary Action */
-    --primary: 355 78% 56%;
+    /* Pulse Red - Primary Emergency Action */
+    --primary: 1 100% 59%;
     --primary-foreground: 0 0% 100%;
 
-    /* Deep Navy - Secondary/Trust */
-    --secondary: 214 50% 23%;
+    /* Night Black - Secondary */
+    --secondary: 240 6% 12%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Calm Blue - Accent/Navigation */
-    --accent: 203 39% 44%;
+    /* Action Blue - Accent/Navigation */
+    --accent: 211 100% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 210 20% 90%;
-    --muted-foreground: 214 30% 40%;
+    --muted: 210 15% 93%;
+    --muted-foreground: 220 10% 45%;
 
-    --destructive: 355 78% 56%;
+    --destructive: 1 100% 59%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 85%;
-    --input: 210 20% 90%;
-    --ring: 203 39% 44%;
+    --border: 220 10% 88%;
+    --input: 220 10% 92%;
+    --ring: 211 100% 50%;
 
     --radius: 0.75rem;
 
     /* Status Colors */
-    --status-success: 145 63% 42%;
-    --status-warning: 38 92% 50%;
-    --status-critical: 355 78% 56%;
-    --status-info: 203 39% 44%;
+    --status-success: 145 65% 42%;
+    --status-warning: 38 95% 55%;
+    --status-critical: 1 100% 59%;
+    --status-info: 211 100% 50%;
+
+    /* LifeLink Special Colors */
+    --lifelink-pickup: 38 95% 55%;
+    --lifelink-dropoff: 145 65% 42%;
+    --lifelink-glow: 1 100% 59%;
 
     /* Gradients */
-    --gradient-emergency: linear-gradient(135deg, hsl(355 78% 56%) 0%, hsl(355 78% 45%) 100%);
-    --gradient-navy: linear-gradient(135deg, hsl(214 50% 23%) 0%, hsl(214 50% 15%) 100%);
-    --gradient-calm: linear-gradient(135deg, hsl(203 39% 44%) 0%, hsl(203 39% 35%) 100%);
+    --gradient-emergency: linear-gradient(135deg, hsl(1 100% 59%) 0%, hsl(1 100% 45%) 100%);
+    --gradient-night: linear-gradient(135deg, hsl(240 6% 12%) 0%, hsl(240 6% 6%) 100%);
+    --gradient-action: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 40%) 100%);
+    --gradient-pickup: linear-gradient(135deg, hsl(38 95% 55%) 0%, hsl(38 95% 45%) 100%);
+    --gradient-dropoff: linear-gradient(135deg, hsl(145 65% 42%) 0%, hsl(145 65% 32%) 100%);
 
     /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(214 50% 23% / 0.1);
-    --shadow-glow-red: 0 0 40px hsl(355 78% 56% / 0.4);
-    --shadow-glow-blue: 0 0 30px hsl(203 39% 44% / 0.3);
+    --shadow-soft: 0 4px 24px -4px hsl(240 6% 12% / 0.08);
+    --shadow-glow-red: 0 0 60px hsl(1 100% 59% / 0.5);
+    --shadow-glow-blue: 0 0 40px hsl(211 100% 50% / 0.4);
+    --shadow-glow-intense: 0 0 80px hsl(1 100% 59% / 0.6), 0 0 120px hsl(1 100% 59% / 0.3);
 
     /* Sidebar */
-    --sidebar-background: 214 50% 23%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 355 78% 56%;
+    --sidebar-background: 240 6% 12%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 1 100% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 203 39% 44%;
+    --sidebar-accent: 211 100% 50%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 214 50% 30%;
-    --sidebar-ring: 203 39% 44%;
+    --sidebar-border: 240 6% 20%;
+    --sidebar-ring: 211 100% 50%;
   }
 
   .dark {
-    --background: 214 50% 10%;
-    --foreground: 108 57% 96%;
+    --background: 240 6% 6%;
+    --foreground: 0 0% 98%;
 
-    --card: 214 50% 15%;
-    --card-foreground: 108 57% 96%;
+    --card: 240 6% 10%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 214 50% 15%;
-    --popover-foreground: 108 57% 96%;
+    --popover: 240 6% 10%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 355 78% 56%;
+    --primary: 1 100% 59%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 214 50% 23%;
+    --secondary: 240 6% 18%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 203 39% 44%;
+    --accent: 211 100% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 214 40% 20%;
-    --muted-foreground: 210 20% 70%;
+    --muted: 240 6% 15%;
+    --muted-foreground: 220 10% 60%;
 
-    --destructive: 355 78% 56%;
+    --destructive: 1 100% 59%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 40% 25%;
-    --input: 214 40% 20%;
-    --ring: 203 39% 44%;
+    --border: 240 6% 20%;
+    --input: 240 6% 18%;
+    --ring: 211 100% 50%;
 
-    --sidebar-background: 214 50% 8%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 355 78% 56%;
+    --sidebar-background: 240 6% 4%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 1 100% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 203 39% 44%;
+    --sidebar-accent: 211 100% 50%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 214 50% 15%;
-    --sidebar-ring: 203 39% 44%;
+    --sidebar-border: 240 6% 15%;
+    --sidebar-ring: 211 100% 50%;
   }
 }
 
@@ -134,12 +142,20 @@
     background: var(--gradient-emergency);
   }
 
-  .bg-gradient-navy {
-    background: var(--gradient-navy);
+  .bg-gradient-night {
+    background: var(--gradient-night);
   }
 
-  .bg-gradient-calm {
-    background: var(--gradient-calm);
+  .bg-gradient-action {
+    background: var(--gradient-action);
+  }
+
+  .bg-gradient-pickup {
+    background: var(--gradient-pickup);
+  }
+
+  .bg-gradient-dropoff {
+    background: var(--gradient-dropoff);
   }
 
   .shadow-glow-red {
@@ -150,29 +166,71 @@
     box-shadow: var(--shadow-glow-blue);
   }
 
+  .shadow-glow-intense {
+    box-shadow: var(--shadow-glow-intense);
+  }
+
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }
 }
 
-/* Pulse animation for emergency button */
+/* LifeLink Pulse animation for SOS button */
 @keyframes pulse-emergency {
   0%, 100% {
-    box-shadow: 0 0 0 0 hsl(355 78% 56% / 0.7);
+    box-shadow: 0 0 0 0 hsl(1 100% 59% / 0.7);
   }
   50% {
-    box-shadow: 0 0 0 20px hsl(355 78% 56% / 0);
+    box-shadow: 0 0 0 30px hsl(1 100% 59% / 0);
   }
 }
 
 @keyframes pulse-ring {
   0% {
     transform: scale(1);
-    opacity: 1;
+    opacity: 0.8;
   }
   100% {
-    transform: scale(1.5);
+    transform: scale(2);
     opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 40px hsl(1 100% 59% / 0.5), 0 0 80px hsl(1 100% 59% / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 60px hsl(1 100% 59% / 0.7), 0 0 120px hsl(1 100% 59% / 0.4);
+  }
+}
+
+@keyframes beacon {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes ambulance-move {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
   }
 }
 
@@ -184,17 +242,56 @@
   animation: pulse-ring 1.5s ease-out infinite;
 }
 
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-beacon {
+  animation: beacon 1s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-ambulance {
+  animation: ambulance-move 0.5s ease-in-out infinite;
+}
+
 /* Status indicator animations */
 @keyframes blink {
   0%, 50%, 100% { opacity: 1; }
   25%, 75% { opacity: 0.3; }
 }
 
+@keyframes siren {
+  0%, 100% { 
+    background-color: hsl(1 100% 59%);
+    box-shadow: 0 0 20px hsl(1 100% 59% / 0.5);
+  }
+  50% { 
+    background-color: hsl(211 100% 50%);
+    box-shadow: 0 0 20px hsl(211 100% 50% / 0.5);
+  }
+}
+
 .animate-blink {
   animation: blink 1s ease-in-out infinite;
+}
+
+.animate-siren {
+  animation: siren 0.5s ease-in-out infinite;
 }
 
 /* Smooth transitions */
 .transition-smooth {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* High contrast mode for outdoor visibility */
+.high-contrast {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --card: 0 0% 100%;
+  --border: 0 0% 0%;
 }
