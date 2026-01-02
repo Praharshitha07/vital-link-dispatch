@@ -7,6 +7,8 @@ import {
   HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SettingsSheet from "./SettingsSheet";
+import HelpSheet from "./HelpSheet";
 
 interface AppSidebarProps {
   currentView: string;
@@ -65,14 +67,22 @@ const AppSidebar = ({ currentView, onViewChange }: AppSidebarProps) => {
 
       <div className="p-4 border-t border-secondary-foreground/10">
         <div className="space-y-1">
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary-foreground/70 hover:bg-secondary-foreground/10 transition-colors">
-            <Settings className="w-5 h-5" />
-            <span className="text-sm">Settings</span>
-          </button>
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary-foreground/70 hover:bg-secondary-foreground/10 transition-colors">
-            <HelpCircle className="w-5 h-5" />
-            <span className="text-sm">Help & Support</span>
-          </button>
+          <SettingsSheet
+            trigger={
+              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary-foreground/70 hover:bg-secondary-foreground/10 transition-colors">
+                <Settings className="w-5 h-5" />
+                <span className="text-sm">Settings</span>
+              </button>
+            }
+          />
+          <HelpSheet
+            trigger={
+              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary-foreground/70 hover:bg-secondary-foreground/10 transition-colors">
+                <HelpCircle className="w-5 h-5" />
+                <span className="text-sm">Help & Support</span>
+              </button>
+            }
+          />
         </div>
       </div>
     </aside>
