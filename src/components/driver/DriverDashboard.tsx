@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import DriverMap from "./DriverMap";
+import DriverLogin from "./DriverLogin";
 
 type DriverStatus = "available" | "dispatched" | "enroute" | "onscene" | "transporting";
 
@@ -26,6 +28,10 @@ interface CurrentCase {
   priority: "critical" | "urgent" | "standard";
   eta: number;
   hospital: string;
+  destination: {
+    lng: number;
+    lat: number;
+  };
   vitals?: {
     heartRate: number;
     bloodPressure: string;
@@ -34,16 +40,24 @@ interface CurrentCase {
 }
 
 const DriverDashboard = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [driverId, setDriverId] = useState("");
   const [status, setStatus] = useState<DriverStatus>("available");
   const [currentCase, setCurrentCase] = useState<CurrentCase | null>(null);
   const [showVitals, setShowVitals] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [eta, setEta] = useState(6);
   const { toast } = useToast();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleLogin = (id: string) => {
+    setDriverId(id);
+    setIsLoggedIn(true);
+  };
 
   const simulateNewCase = () => {
     setCurrentCase({
@@ -53,6 +67,10 @@ const DriverDashboard = () => {
       priority: "critical",
       eta: 6,
       hospital: "City General Hospital",
+      destination: {
+        lng: -74.01,
+        lat: 40.72,
+      },
       vitals: {
         heartRate: 142,
         bloodPressure: "180/110",
@@ -100,35 +118,28 @@ const DriverDashboard = () => {
     }
   };
 
+  // Show login screen if not logged in
+  if (!isLoggedIn) {
+    return <DriverLogin onLogin={handleLogin} />;
+  }
+
   return (
     <div className="h-full flex flex-col bg-secondary text-secondary-foreground">
       {/* Split-View: Upper 70% Map */}
       <div className="flex-[7] relative overflow-hidden">
-        {/* Map placeholder - High contrast dark mode */}
-        <div className="absolute inset-0 bg-gradient-to-b from-secondary via-secondary/95 to-secondary/90">
-          <svg className="w-full h-full opacity-20" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <pattern id="driverGrid" width="8" height="8" patternUnits="userSpaceOnUse">
-              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.3"/>
-            </pattern>
-            <rect width="100" height="100" fill="url(#driverGrid)" />
-          </svg>
-        </div>
+        {/* Mapbox Map */}
+        <DriverMap 
+          destination={currentCase?.destination ? {
+            ...currentCase.destination,
+            address: currentCase.address
+          } : undefined}
+          onEtaUpdate={setEta}
+        />
 
-        {/* Navigation Content */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {currentCase ? (
-            <div className="text-center">
-              <Navigation className="w-20 h-20 text-accent mx-auto mb-4 animate-pulse" />
-              <p className="text-2xl font-bold text-secondary-foreground">Turn-by-Turn Navigation</p>
-              <p className="text-accent text-lg mt-2">
-                <span className="font-semibold">{currentCase.eta} min</span> to destination
-              </p>
-              <div className="mt-4 px-6 py-3 bg-accent/20 rounded-2xl inline-block">
-                <p className="text-sm text-secondary-foreground/80">{currentCase.address}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center">
+        {/* Navigation Overlay when no map token */}
+        {!currentCase && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center pointer-events-auto">
               <CheckCircle2 className="w-16 h-16 text-status-success mx-auto mb-4" />
               <p className="text-xl font-semibold text-secondary-foreground">Ready for Dispatch</p>
               <p className="text-secondary-foreground/60 mt-2">Awaiting assignment</p>
@@ -141,16 +152,16 @@ const DriverDashboard = () => {
                 Simulate Emergency
               </Button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Top Status Bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-secondary to-transparent">
+        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-secondary to-transparent z-10">
           <div className="flex items-center gap-3">
             <div className={`w-4 h-4 rounded-full ${status === "available" ? "bg-status-success" : "bg-status-critical animate-siren"}`} />
             <div>
               <p className="text-lg font-bold text-secondary-foreground capitalize">{status.replace("-", " ")}</p>
-              <p className="text-sm text-secondary-foreground/60">Unit A-7 • Michael Chen</p>
+              <p className="text-sm text-secondary-foreground/60">Unit A-7 • {driverId}</p>
             </div>
           </div>
           
@@ -167,9 +178,17 @@ const DriverDashboard = () => {
           </div>
         </div>
 
+        {/* ETA Display when case active */}
+        {currentCase && (
+          <div className="absolute top-20 left-4 z-10 bg-secondary/90 backdrop-blur-sm rounded-2xl px-4 py-3 border border-border/30">
+            <p className="text-sm text-secondary-foreground/60">ETA to destination</p>
+            <p className="text-2xl font-bold text-accent">{eta} min</p>
+          </div>
+        )}
+
         {/* Vitals Sidebar Overlay (non-intrusive) */}
         {currentCase?.vitals && showVitals && (
-          <div className="absolute top-20 right-4 w-56 bg-secondary/95 backdrop-blur-sm rounded-2xl border border-border/30 p-4 animate-slide-in-right shadow-lg">
+          <div className="absolute top-20 right-4 w-56 bg-secondary/95 backdrop-blur-sm rounded-2xl border border-border/30 p-4 animate-slide-in-right shadow-lg z-10">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-semibold text-secondary-foreground">Patient Vitals</span>
               <Button 
@@ -199,7 +218,7 @@ const DriverDashboard = () => {
 
         {/* Case Info Mini Card */}
         {currentCase && (
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between z-10">
             <div className="flex items-center gap-3 bg-secondary/90 backdrop-blur-sm rounded-xl px-4 py-2 border border-border/30">
               <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${getPriorityColor(currentCase.priority)}`}>
                 {currentCase.priority}
