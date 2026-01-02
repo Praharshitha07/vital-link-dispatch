@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Navigation, 
   Phone, 
@@ -8,7 +8,11 @@ import {
   AlertTriangle,
   CheckCircle2,
   Mic,
-  Volume2
+  Volume2,
+  ChevronUp,
+  Heart,
+  Activity,
+  Hospital
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -22,12 +26,24 @@ interface CurrentCase {
   priority: "critical" | "urgent" | "standard";
   eta: number;
   hospital: string;
+  vitals?: {
+    heartRate: number;
+    bloodPressure: string;
+    condition: string;
+  };
 }
 
 const DriverDashboard = () => {
   const [status, setStatus] = useState<DriverStatus>("available");
   const [currentCase, setCurrentCase] = useState<CurrentCase | null>(null);
+  const [showVitals, setShowVitals] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { toast } = useToast();
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const simulateNewCase = () => {
     setCurrentCase({
@@ -37,219 +53,262 @@ const DriverDashboard = () => {
       priority: "critical",
       eta: 6,
       hospital: "City General Hospital",
+      vitals: {
+        heartRate: 142,
+        bloodPressure: "180/110",
+        condition: "Cardiac Emergency"
+      }
     });
     setStatus("dispatched");
     toast({
-      title: "New Emergency Case",
-      description: "Critical case assigned. Review details below.",
+      title: "🚨 EMERGENCY DISPATCH",
+      description: "Critical case assigned. Navigation starting...",
     });
   };
 
-  const handleStatusUpdate = (newStatus: DriverStatus) => {
-    setStatus(newStatus);
-    const statusMessages: Record<DriverStatus, string> = {
-      available: "Status: Available for dispatch",
-      dispatched: "Case accepted. Starting navigation.",
-      enroute: "En route to patient location.",
-      onscene: "Arrived at scene. Providing care.",
-      transporting: "Transporting to hospital.",
-    };
+  const handlePickup = () => {
+    setStatus("onscene");
     toast({
-      title: "Status Updated",
-      description: statusMessages[newStatus],
+      title: "Patient Pickup Confirmed",
+      description: "On scene. Providing care.",
+    });
+  };
+
+  const handleDropoff = () => {
+    setStatus("transporting");
+    toast({
+      title: "En Route to Hospital",
+      description: `Heading to ${currentCase?.hospital}`,
     });
   };
 
   const completeCase = () => {
     setCurrentCase(null);
     setStatus("available");
+    setShowVitals(false);
     toast({
-      title: "Case Completed",
+      title: "✓ Case Completed",
       description: "Patient handoff successful. Ready for new dispatch.",
     });
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "critical": return "bg-status-critical text-primary-foreground";
+      case "critical": return "bg-status-critical text-primary-foreground animate-blink";
       case "urgent": return "bg-status-warning text-primary-foreground";
       default: return "bg-status-info text-accent-foreground";
     }
   };
 
-  const getStatusColor = () => {
-    switch (status) {
-      case "available": return "bg-status-success";
-      case "dispatched": 
-      case "enroute": return "bg-status-warning";
-      case "onscene":
-      case "transporting": return "bg-status-critical";
-      default: return "bg-muted";
-    }
-  };
-
   return (
-    <div className="h-full flex flex-col p-6 gap-6">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className={`w-4 h-4 rounded-full ${getStatusColor()} animate-pulse`} />
-          <div>
-            <h2 className="text-xl font-bold text-foreground capitalize">{status.replace("-", " ")}</h2>
-            <p className="text-sm text-muted-foreground">Unit A-7 • Michael Chen</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Volume2 className="w-5 h-5" />
-          </Button>
-          <Button variant="secondary" size="icon">
-            <Mic className="w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Map Placeholder */}
-        <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden shadow-soft">
-          <div className="h-full min-h-[400px] bg-gradient-to-br from-accent/5 to-secondary/5 flex items-center justify-center relative">
-            <div className="absolute inset-0 opacity-10">
-              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-                </pattern>
-                <rect width="100" height="100" fill="url(#grid)" />
-              </svg>
-            </div>
-            <div className="text-center z-10">
-              <Navigation className="w-12 h-12 text-accent mx-auto mb-4" />
-              <p className="text-lg font-semibold text-foreground">Navigation Display</p>
-              <p className="text-sm text-muted-foreground mt-1">Real-time GPS tracking</p>
-              {currentCase && (
-                <div className="mt-4 px-4 py-2 bg-accent/10 rounded-lg">
-                  <p className="text-sm font-medium text-accent">ETA: {currentCase.eta} minutes</p>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="h-full flex flex-col bg-secondary text-secondary-foreground">
+      {/* Split-View: Upper 70% Map */}
+      <div className="flex-[7] relative overflow-hidden">
+        {/* Map placeholder - High contrast dark mode */}
+        <div className="absolute inset-0 bg-gradient-to-b from-secondary via-secondary/95 to-secondary/90">
+          <svg className="w-full h-full opacity-20" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <pattern id="driverGrid" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.3"/>
+            </pattern>
+            <rect width="100" height="100" fill="url(#driverGrid)" />
+          </svg>
         </div>
 
-        {/* Controls Panel */}
-        <div className="space-y-4">
-          {/* Current Case */}
+        {/* Navigation Content */}
+        <div className="absolute inset-0 flex items-center justify-center">
           {currentCase ? (
-            <div className="bg-card rounded-2xl p-5 border border-border shadow-soft animate-scale-in">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-foreground">Current Case</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getPriorityColor(currentCase.priority)}`}>
-                  {currentCase.priority}
-                </span>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <User className="w-5 h-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium text-foreground">{currentCase.patientName}</p>
-                    <p className="text-sm text-muted-foreground">Case #{currentCase.id}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-                  <p className="text-sm text-foreground">{currentCase.address}</p>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
-                  <p className="text-sm text-foreground">ETA: {currentCase.eta} minutes</p>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-border flex gap-2">
-                <Button variant="secondary" size="sm" className="flex-1">
-                  <Phone className="w-4 h-4 mr-1" />
-                  Patient
-                </Button>
-                <Button variant="default" size="sm" className="flex-1">
-                  <Phone className="w-4 h-4 mr-1" />
-                  Dispatch
-                </Button>
+            <div className="text-center">
+              <Navigation className="w-20 h-20 text-accent mx-auto mb-4 animate-pulse" />
+              <p className="text-2xl font-bold text-secondary-foreground">Turn-by-Turn Navigation</p>
+              <p className="text-accent text-lg mt-2">
+                <span className="font-semibold">{currentCase.eta} min</span> to destination
+              </p>
+              <div className="mt-4 px-6 py-3 bg-accent/20 rounded-2xl inline-block">
+                <p className="text-sm text-secondary-foreground/80">{currentCase.address}</p>
               </div>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl p-5 border border-border shadow-soft text-center">
-              <CheckCircle2 className="w-12 h-12 text-status-success mx-auto mb-3" />
-              <p className="font-semibold text-foreground">Ready for Dispatch</p>
-              <p className="text-sm text-muted-foreground mt-1">Awaiting new case assignment</p>
+            <div className="text-center">
+              <CheckCircle2 className="w-16 h-16 text-status-success mx-auto mb-4" />
+              <p className="text-xl font-semibold text-secondary-foreground">Ready for Dispatch</p>
+              <p className="text-secondary-foreground/60 mt-2">Awaiting assignment</p>
               <Button 
-                variant="secondary" 
-                className="mt-4 w-full"
                 onClick={simulateNewCase}
+                className="mt-6 bg-gradient-action hover:brightness-110"
+                size="lg"
               >
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                Simulate New Case
+                <AlertTriangle className="w-5 h-5 mr-2" />
+                Simulate Emergency
               </Button>
             </div>
           )}
+        </div>
 
-          {/* Status Controls */}
-          <div className="bg-card rounded-2xl p-5 border border-border shadow-soft">
-            <h3 className="font-semibold text-foreground mb-4">Quick Status</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant={status === "available" ? "default" : "outline"}
-                size="lg"
-                onClick={() => handleStatusUpdate("available")}
-                disabled={!!currentCase}
-                className="h-16 text-base"
+        {/* Top Status Bar */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-secondary to-transparent">
+          <div className="flex items-center gap-3">
+            <div className={`w-4 h-4 rounded-full ${status === "available" ? "bg-status-success" : "bg-status-critical animate-siren"}`} />
+            <div>
+              <p className="text-lg font-bold text-secondary-foreground capitalize">{status.replace("-", " ")}</p>
+              <p className="text-sm text-secondary-foreground/60">Unit A-7 • Michael Chen</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-mono text-secondary-foreground/80">
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <Button variant="ghost" size="icon" className="text-secondary-foreground/60 hover:text-secondary-foreground hover:bg-secondary-foreground/10">
+              <Volume2 className="w-6 h-6" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-secondary-foreground/60 hover:text-secondary-foreground hover:bg-secondary-foreground/10">
+              <Mic className="w-6 h-6" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Vitals Sidebar Overlay (non-intrusive) */}
+        {currentCase?.vitals && showVitals && (
+          <div className="absolute top-20 right-4 w-56 bg-secondary/95 backdrop-blur-sm rounded-2xl border border-border/30 p-4 animate-slide-in-right shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-secondary-foreground">Patient Vitals</span>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="w-6 h-6 text-secondary-foreground/60"
+                onClick={() => setShowVitals(false)}
               >
-                Available
-              </Button>
-              <Button
-                variant={status === "enroute" ? "destructive" : "outline"}
-                size="lg"
-                onClick={() => handleStatusUpdate("enroute")}
-                disabled={!currentCase}
-                className="h-16 text-base"
-              >
-                En Route
-              </Button>
-              <Button
-                variant={status === "onscene" ? "destructive" : "outline"}
-                size="lg"
-                onClick={() => handleStatusUpdate("onscene")}
-                disabled={!currentCase}
-                className="h-16 text-base"
-              >
-                On Scene
-              </Button>
-              <Button
-                variant={status === "transporting" ? "destructive" : "outline"}
-                size="lg"
-                onClick={() => handleStatusUpdate("transporting")}
-                disabled={!currentCase}
-                className="h-16 text-base"
-              >
-                Transport
+                ×
               </Button>
             </div>
-            
-            {currentCase && status === "transporting" && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Heart className="w-4 h-4 text-status-critical" />
+                <span className="text-secondary-foreground font-mono">{currentCase.vitals.heartRate} BPM</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-accent" />
+                <span className="text-secondary-foreground font-mono">{currentCase.vitals.bloodPressure}</span>
+              </div>
+              <div className="pt-2 border-t border-border/30">
+                <span className="text-sm text-secondary-foreground/80">{currentCase.vitals.condition}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Case Info Mini Card */}
+        {currentCase && (
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+            <div className="flex items-center gap-3 bg-secondary/90 backdrop-blur-sm rounded-xl px-4 py-2 border border-border/30">
+              <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${getPriorityColor(currentCase.priority)}`}>
+                {currentCase.priority}
+              </span>
+              <div>
+                <p className="font-semibold text-secondary-foreground">{currentCase.patientName}</p>
+                <p className="text-sm text-secondary-foreground/60">#{currentCase.id}</p>
+              </div>
+            </div>
+
+            {currentCase.vitals && !showVitals && (
               <Button
-                variant="default"
-                size="lg"
-                className="w-full mt-3 h-16 text-base bg-status-success hover:bg-status-success/90"
-                onClick={completeCase}
+                variant="ghost"
+                size="sm"
+                className="bg-secondary/90 backdrop-blur-sm border border-border/30 text-secondary-foreground"
+                onClick={() => setShowVitals(true)}
               >
-                <CheckCircle2 className="w-5 h-5 mr-2" />
-                Complete Handoff
+                <Heart className="w-4 h-4 mr-1 text-status-critical" />
+                Vitals
+                <ChevronUp className="w-4 h-4 ml-1" />
               </Button>
             )}
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Lower 30%: Action Triggers */}
+      <div className="flex-[3] bg-gradient-night p-4 border-t-2 border-primary/30">
+        {currentCase ? (
+          <div className="h-full flex gap-4">
+            {/* PICKUP PATIENT Button (Amber) */}
+            <Button
+              onClick={handlePickup}
+              disabled={status === "onscene" || status === "transporting"}
+              className={`flex-1 h-full text-2xl font-bold rounded-2xl transition-all duration-300 ${
+                status === "onscene" || status === "transporting"
+                  ? "bg-muted/20 text-muted-foreground opacity-50"
+                  : "bg-gradient-pickup text-primary-foreground hover:brightness-110 shadow-lg"
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <User className="w-10 h-10" />
+                <span>PICKUP PATIENT</span>
+                {status !== "onscene" && status !== "transporting" && (
+                  <span className="text-sm font-normal opacity-80">Tap when on scene</span>
+                )}
+              </div>
+            </Button>
+
+            {/* DROP AT HOSPITAL Button (Green) */}
+            <Button
+              onClick={status === "transporting" ? completeCase : handleDropoff}
+              disabled={status !== "onscene" && status !== "transporting"}
+              className={`flex-1 h-full text-2xl font-bold rounded-2xl transition-all duration-300 ${
+                status !== "onscene" && status !== "transporting"
+                  ? "bg-muted/20 text-muted-foreground opacity-50"
+                  : "bg-gradient-dropoff text-primary-foreground hover:brightness-110 shadow-lg"
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Hospital className="w-10 h-10" />
+                <span>{status === "transporting" ? "COMPLETE HANDOFF" : "DROP AT HOSPITAL"}</span>
+                {(status === "onscene" || status === "transporting") && (
+                  <span className="text-sm font-normal opacity-80">
+                    {status === "transporting" ? "Tap to complete" : "Start transport"}
+                  </span>
+                )}
+              </div>
+            </Button>
+          </div>
+        ) : (
+          /* No active case - show status */
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-status-success/20 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-8 h-8 text-status-success" />
+              </div>
+              <p className="text-xl font-semibold text-secondary-foreground">Available for Dispatch</p>
+              <p className="text-secondary-foreground/60 mt-1">Waiting for next assignment...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Action Buttons */}
+        {currentCase && (
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 border-secondary-foreground/20 text-secondary-foreground hover:bg-secondary-foreground/10"
+            >
+              <Phone className="w-5 h-5 mr-2" />
+              Call Patient
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-12 border-secondary-foreground/20 text-secondary-foreground hover:bg-secondary-foreground/10"
+            >
+              <Phone className="w-5 h-5 mr-2" />
+              Call Dispatch
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-12 border-secondary-foreground/20 text-secondary-foreground hover:bg-secondary-foreground/10"
+            >
+              <Hospital className="w-5 h-5 mr-2" />
+              Call Hospital
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

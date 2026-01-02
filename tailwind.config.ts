@@ -66,6 +66,11 @@ export default {
           critical: "hsl(var(--status-critical))",
           info: "hsl(var(--status-info))",
         },
+        lifelink: {
+          pickup: "hsl(var(--lifelink-pickup))",
+          dropoff: "hsl(var(--lifelink-dropoff))",
+          glow: "hsl(var(--lifelink-glow))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
